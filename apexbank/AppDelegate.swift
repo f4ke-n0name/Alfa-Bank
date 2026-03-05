@@ -1,10 +1,3 @@
-//
-//  AppDelegate.swift
-//  apexbank
-//
-//  Created by Anton Karavaev on 05.03.2026.
-//
-
 import UIKit
 
 @main
