@@ -1,11 +1,30 @@
 import Foundation
 
-class RegisterPresenter {
+final class RegisterPresenter {
     weak var view: RegisterViewInput?
     var interactor: RegisterInteractorInput?
     var router: RegisterRouterInput?
 
     private var isLoading = false
+
+    private func render(
+        firstNameError: String = "",
+        lastNameError: String = "",
+        emailError: String = "",
+        passwordError: String = "",
+        banner: String = "",
+        isLoading: Bool = false
+    ) {
+        let model = RegisterViewModel(
+            firstNameState: RegisterFieldState(hasError: !firstNameError.isEmpty, errorMessage: firstNameError),
+            lastNameState: RegisterFieldState(hasError: !lastNameError.isEmpty, errorMessage: lastNameError),
+            emailState: RegisterFieldState(hasError: !emailError.isEmpty, errorMessage: emailError),
+            passwordState: RegisterFieldState(hasError: !passwordError.isEmpty, errorMessage: passwordError),
+            errorBanner: banner,
+            isLoading: isLoading
+        )
+        view?.render(model)
+    }
 }
 
 extension RegisterPresenter: RegisterViewOutput {
@@ -13,41 +32,31 @@ extension RegisterPresenter: RegisterViewOutput {
     func viewDidLoad() {}
 
     func didTapRegister(firstName: String, lastName: String, email: String, password: String) {
-        if isLoading {
-            return
-        }
-        view?.clearErrors()
+        guard !isLoading else { return }
 
-        var hasError = false
+        let firstNameError = firstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Введите имя" : ""
+        let lastNameError = lastName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Введите фамилию" : ""
+        let emailError = email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Введите email" : ""
+        let passwordError = password.isEmpty ? "Введите пароль" : ""
 
-        if firstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            view?.showFirstNameError("Введите имя")
-            hasError = true
-        }
-        if lastName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            view?.showLastNameError("Введите фамилию")
-            hasError = true
-        }
-        if email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            view?.showEmailError("Введите email")
-            hasError = true
-        }
-        if password.isEmpty {
-            view?.showPasswordError("Введите пароль")
-            hasError = true
-        }
-        if hasError {
+        if !firstNameError.isEmpty || !lastNameError.isEmpty || !emailError.isEmpty || !passwordError.isEmpty {
+            render(
+                firstNameError: firstNameError,
+                lastNameError: lastNameError,
+                emailError: emailError,
+                passwordError: passwordError
+            )
             return
         }
 
         isLoading = true
-        view?.showLoading()
+        render(isLoading: true)
 
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             defer {
                 self.isLoading = false
-                self.view?.hideLoading()
+                self.render(isLoading: false)
             }
             do {
                 let response = try self.interactor?.register(
@@ -66,17 +75,15 @@ extension RegisterPresenter: RegisterViewOutput {
                 }
             } catch let error as AuthError {
                 switch error {
-                case .emailAlreadyTaken:
-                    self.view?.showEmailError(error.localizedDescription)
-                case .invalidEmailFormat:
-                    self.view?.showEmailError(error.localizedDescription)
+                case .emailAlreadyTaken, .invalidEmailFormat:
+                    self.render(emailError: error.localizedDescription)
                 case .passwordTooShort:
-                    self.view?.showPasswordError(error.localizedDescription)
-                case .emptyCredentials, .invalidCredentials, .sessionExpired:
-                    self.view?.showError(error.localizedDescription)
+                    self.render(passwordError: error.localizedDescription)
+                default:
+                    self.render(banner: error.localizedDescription)
                 }
             } catch {
-                self.view?.showError(error.localizedDescription)
+                self.render(banner: error.localizedDescription)
             }
         }
     }
@@ -86,34 +93,22 @@ extension RegisterPresenter: RegisterViewOutput {
     }
 
     func didChangeFirstName(_ value: String) {
-        if let message = interactor?.validateName(value) {
-            view?.showFirstNameError(message)
-        } else {
-            view?.showFirstNameError("")
-        }
+        let error = interactor?.validateName(value) ?? ""
+        render(firstNameError: error)
     }
 
     func didChangeLastName(_ value: String) {
-        if let message = interactor?.validateName(value) {
-            view?.showLastNameError(message)
-        } else {
-            view?.showLastNameError("")
-        }
+        let error = interactor?.validateName(value) ?? ""
+        render(lastNameError: error)
     }
 
     func didChangeEmail(_ value: String) {
-        if let message = interactor?.validateEmail(value) {
-            view?.showEmailError(message)
-        } else {
-            view?.showEmailError("")
-        }
+        let error = interactor?.validateEmail(value) ?? ""
+        render(emailError: error)
     }
 
     func didChangePassword(_ value: String) {
-        if let message = interactor?.validatePassword(value) {
-            view?.showPasswordError(message)
-        } else {
-            view?.showPasswordError("")
-        }
+        let error = interactor?.validatePassword(value) ?? ""
+        render(passwordError: error)
     }
 }
