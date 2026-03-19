@@ -13,36 +13,30 @@ extension AuthPresenter: AuthViewOutput {
     func viewDidLoad() {}
 
     func didTapLogin(email: String, password: String) {
-        if isLoading {
-            return
-        }
+        guard !isLoading else { return }
 
-        view?.clearErrors()
-        var hasError = false
+        let emailError = email.isEmpty ? "Введите email" : ""
+        let passwordError = password.isEmpty ? "Введите пароль" : ""
 
-        if email.isEmpty {
-            view?.showEmailError("Введите email")
-            hasError = true
-        }
-        if password.isEmpty {
-            view?.showPasswordError("Введите пароль")
-            hasError = true
-        }
-        if hasError {
+        if !emailError.isEmpty || !passwordError.isEmpty {
+            render(emailError: emailError, passwordError: passwordError)
             return
         }
 
         isLoading = true
-        view?.showLoading()
+        render(isLoading: true)
 
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             defer {
                 self.isLoading = false
-                self.view?.hideLoading()
+                self.render(isLoading: false)
             }
             do {
-                let response = try self.interactor?.login(email: email, password: password)
+                let response = try self.interactor?.login(
+                    email: email,
+                    password: password
+                )
                 if let response {
                     let session = UserSession(
                         token: response.token,
@@ -54,39 +48,54 @@ extension AuthPresenter: AuthViewOutput {
             } catch let error as AuthError {
                 switch error {
                 case .invalidCredentials:
-                    self.view?.showError(error.localizedDescription)
+                    self.render(banner: error.localizedDescription)
                 case .invalidEmailFormat:
-                    self.view?.showEmailError(error.localizedDescription)
+                    self.render(emailError: error.localizedDescription)
                 case .passwordTooShort:
-                    self.view?.showPasswordError(error.localizedDescription)
-                case .emptyCredentials:
-                    self.view?.showError(error.localizedDescription)
-                case .emailAlreadyTaken, .sessionExpired:
-                    self.view?.showError(error.localizedDescription)
+                    self.render(passwordError: error.localizedDescription)
+                default:
+                    self.render(banner: error.localizedDescription)
                 }
             } catch {
-                self.view?.showError(error.localizedDescription)
+                self.render(banner: error.localizedDescription)
             }
         }
     }
-
+    
     func didTapRegister() {
         router?.openRegistration()
     }
 
     func didChangeEmail(_ email: String) {
-        if let message = interactor?.validateEmail(email) {
-            view?.showEmailError(message)
-        } else {
-            view?.showEmailError("")
-        }
+        let error = interactor?.validateEmail(email) ?? ""
+        render(emailError: error)
     }
 
     func didChangePassword(_ password: String) {
-        if let message = interactor?.validatePassword(password) {
-            view?.showPasswordError(message)
-        } else {
-            view?.showPasswordError("")
-        }
+        let error = interactor?.validatePassword(password) ?? ""
+        render(passwordError: error)
+    }
+
+    private func render(
+        emailError: String = "",
+        passwordError: String = "",
+        banner: String = "",
+        isLoading: Bool = false
+    ) {
+        let model = AuthViewModel(
+            emailState: FieldState(
+                text: "",
+                hasError: !emailError.isEmpty,
+                errorMessage: emailError
+            ),
+            passwordState: FieldState(
+                text: "",
+                hasError: !passwordError.isEmpty,
+                errorMessage: passwordError
+            ),
+            errorBanner: banner,
+            isLoading: isLoading
+        )
+        view?.render(model)
     }
 }

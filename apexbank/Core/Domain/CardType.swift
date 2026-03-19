@@ -1,4 +1,5 @@
 enum CardType: String, Equatable {
-    case debit
-    case credit
+    case visa = "Visa"
+    case mastercard = "Mastercard"
+    case mir = "Мир"
 }

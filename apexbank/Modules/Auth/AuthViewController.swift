@@ -144,7 +144,6 @@ class AuthViewController: UIViewController {
     }
 }
 
-
 extension AuthViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         if textField == emailField {
@@ -159,37 +158,32 @@ extension AuthViewController: UITextFieldDelegate {
 
 extension AuthViewController: AuthViewInput {
 
-    func showLoading() {
+    func render(_ model: AuthViewModel) {
+        emailErrorLabel.text = model.emailState.errorMessage
+        emailErrorLabel.isHidden = !model.emailState.hasError
+        emailField.setError(model.emailState.hasError)
+
+        passwordErrorLabel.text = model.passwordState.errorMessage
+        passwordErrorLabel.isHidden = !model.passwordState.hasError
+        passwordField.setError(model.passwordState.hasError)
+
+        errorBanner.isHidden = model.errorBanner.isEmpty
+        errorBanner.text = model.errorBanner
+
+        model.isLoading ? showLoading() : hideLoading()
+    }
+
+    private func showLoading() {
         loginButton.isEnabled = false
         var config = loginButton.configuration
         config?.title = "Вход..."
         loginButton.configuration = config
     }
 
-    func hideLoading() {
+    private func hideLoading() {
         loginButton.isEnabled = true
         var config = loginButton.configuration
         config?.title = "Войти"
         loginButton.configuration = config
-    }
-
-    func showError(_ message: String) {
-        errorBanner.show(message)
-    }
-
-    func clearErrors() {
-        errorBanner.hide()
-        showEmailError("")
-        showPasswordError("")
-    }
-
-    func showEmailError(_ message: String) {
-        emailErrorLabel.show(message)
-        emailField.setError(!message.isEmpty)
-    }
-
-    func showPasswordError(_ message: String) {
-        passwordErrorLabel.show(message)
-        passwordField.setError(!message.isEmpty)
     }
 }

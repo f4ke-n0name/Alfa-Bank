@@ -8,14 +8,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
-        let authViewController = AuthModule.build()
-        let navigationController = UINavigationController(rootViewController: authViewController)
-        navigationController.navigationBar.prefersLargeTitles = false
+        Task {
+                do {
+                    let repository = CardListRepository()
+                    let cards = try await repository.getCards()
+                    print("Загружено карт: \(cards.count)")
+                    cards.forEach { card in
+                        print("\(card.cardType) **** \(card.cardNumber.suffix(4)) | \(card.balance)")
+                    }
+                } catch {
+                    print("Ошибка: \(error.localizedDescription)")
+                }
+            }
 
-        let window = UIWindow(windowScene: windowScene)
-        window.rootViewController = navigationController
-        window.makeKeyAndVisible()
-        self.window = window
+            let window = UIWindow(windowScene: windowScene)
+            window.rootViewController = UINavigationController(rootViewController: AuthModule.build())
+            window.makeKeyAndVisible()
+            self.window = window
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
