@@ -6,7 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		453DC1EF2F6C290E0007FCA2 /* cards.json in Resources */ = {isa = PBXBuildFile; fileRef = 453DC1EE2F6C29000007FCA2 /* cards.json */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		453DC1EE2F6C29000007FCA2 /* cards.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = cards.json; sourceTree = "<group>"; };
 		45ED98F72F58F5A100F07F31 /* apexbank.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = apexbank.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -45,6 +50,7 @@
 		45ED98EE2F58F5A100F07F31 = {
 			isa = PBXGroup;
 			children = (
+				453DC1EE2F6C29000007FCA2 /* cards.json */,
 				45ED98F92F58F5A100F07F31 /* apexbank */,
 				45ED98F82F58F5A100F07F31 /* Products */,
 			);
@@ -122,6 +128,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				453DC1EF2F6C290E0007FCA2 /* cards.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
