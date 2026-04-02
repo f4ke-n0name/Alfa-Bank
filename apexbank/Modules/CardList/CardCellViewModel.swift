@@ -2,6 +2,7 @@ import Foundation
 
 struct CardCellViewModel: Equatable {
     let id: String
+    let number: String
     let lastFourDigits: String
     let cardholderName: String
     let balance: String
