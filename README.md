@@ -1,3 +1,79 @@
+# ApexBank
+
+## Лабораторная №6 — дизайн-система
+
+### Ссылка на дизайн-систему в Figma
+
+https://www.figma.com/design/diJwIFyD4JVoQgR79dOost/Untitled?node-id=1-2&p=f&t=x55NNHK2AEpimvTV-0
+
+### Дополнительно
+- Реализована тёмная тема и переключение темы (light/dark) через кнопку в navigation bar на каждом экране.
+
+### Где лежит дизайн-система
+apexbank/DesignSystem/
+
+Структура:
+- DesignSystem/Tokens/ — токены (цвета/типографика/отступы)
+- DesignSystem/Components/ — переиспользуемые UI-компоненты
+- DesignSystem/Extensions/ — утилиты 
+
+### Токены
+
+#### Colors
+Лежат в DesignSystem/Tokens/DSColors.swift и основаны на Figma tokens.
+
+Есть:
+- DS.Colors.primary (#CD2062FF)
+- DS.Colors.secondary (#D1D1D1FF)
+- DS.Colors.background (light/dark)
+- DS.Colors.surface (light/dark)
+- DS.Colors.textPrimary (light/dark)
+- DS.Colors.textSecondary (light/dark)
+- DS.Colors.error (#FF4D4DFF)
+
+Цвета поддерживают формат #RRGGBB и #RRGGBBAA.
+
+#### Typography
+Лежит в DesignSystem/Tokens/DSTypography.swift.
+
+Поддерживаются стили из Figma:
+- title1 (Audiowide 32)
+- title2 (Gloock 16)
+- body (Host Grotesk 16)
+- button (Host Grotesk 16, bold)
+- caption (Host Grotesk 12, bold)
+- text12 (Host Grotesk 12)
+
+Если кастомный шрифт не добавлен в проект, используется fallback на .systemFont.
+
+#### Spacing
+Лежит в DesignSystem/Tokens/DSSpacing.swift.
+
+Есть:
+- xs/s/m/l/xl (4/8/16/24/32)
+- cornerRadius (12)
+
+### Компоненты
+Лежат в DesignSystem/Components/:
+1) DSButton — унифицированная primary-кнопка, стиль фиксирован внутри компонента
+2) TextStyle + UILabel.apply(_:) — централизованное применение шрифтов/цветов
+3) DSStateView — отображение loading / empty / error (+retry)
+
+Дополнительно:
+- DSThemeToggleButton — маленькая круглая кнопка (sun/moon) для переключения light/dark в navigation bar
+
+### Где применено
+- Экран авторизации: Modules/Auth/AuthViewController.swift
+- Экран списка карт: Modules/CardList/CardListViewController.swift
+
+### Состояния экрана (loading/empty/error) через компонент
+CardListViewController использует DSStateView:
+- .loading(text:)
+- .empty(text:)
+- .error(text:buttonTitle:) (кнопка `Повторить`)
+
+---
+
 ## Архитектура: VIPER
 
 ### Обоснование

@@ -4,32 +4,25 @@ class RegisterViewController: UIViewController {
 
     var output: RegisterViewOutput?
 
-    private let firstNameField = AuthTextField(placeholder: "Имя")
-    private let firstNameError = AuthErrorLabel()
-    private let lastNameField = AuthTextField(placeholder: "Фамилия")
-    private let lastNameError = AuthErrorLabel()
-    private let emailField = AuthTextField(
+    private let firstNameField = DSTextField(placeholder: "Имя")
+    private let firstNameError = DSErrorLabel()
+    private let lastNameField = DSTextField(placeholder: "Фамилия")
+    private let lastNameError = DSErrorLabel()
+    private let emailField = DSTextField(
         placeholder: "Email",
         keyboardType: .emailAddress
     )
-    private let emailError = AuthErrorLabel()
-    private let passwordField = AuthTextField(
+    private let emailError = DSErrorLabel()
+    private let passwordField = DSTextField(
         placeholder: "Пароль",
         isSecure: true
     )
-    private let passwordError = AuthErrorLabel()
-    private let errorBanner = AuthErrorBanner()
+    private let passwordError = DSErrorLabel()
+    private let errorBanner = DSErrorBanner()
 
-    private let registerButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.title = "Зарегистрироваться"
-        config.cornerStyle = .large
-        config.baseForegroundColor = .white
-        config.baseBackgroundColor = .systemBlue
-        let btn = UIButton(configuration: config)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        return btn
-    }()
+    private let registerButton = DSButton(title: "Зарегистрироваться")
+
+    private let themeToggle = DSThemeToggleButton()
 
     private lazy var stackView: UIStackView = {
         let sv = UIStackView(arrangedSubviews: [
@@ -41,7 +34,7 @@ class RegisterViewController: UIViewController {
             registerButton,
         ])
         sv.axis = .vertical
-        sv.spacing = 12
+        sv.spacing = DS.Spacing.cornerRadius
         sv.setCustomSpacing(4, after: firstNameField)
         sv.setCustomSpacing(4, after: lastNameField)
         sv.setCustomSpacing(4, after: emailField)
@@ -53,11 +46,32 @@ class RegisterViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
-        title = "Регистрация"
+        view.backgroundColor = DS.Colors.background
+        let brandLabel = UILabel()
+        brandLabel.text = "ApexBank"
+        brandLabel.textAlignment = .center
+        brandLabel.textColor = DS.Colors.primary
+        brandLabel.apply(.title1)
+        brandLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(brandLabel)
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: DS.Colors.primary,
+            .font: DS.Typography.title2()
+        ]
+        navigationController?.navigationBar.titleTextAttributes = titleAttributes
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: themeToggle)
+
         setupLayout()
         setupActions()
         output?.viewDidLoad()
+
+        NSLayoutConstraint.activate([
+            brandLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: DS.Spacing.l),
+            brandLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            brandLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            stackView.topAnchor.constraint(greaterThanOrEqualTo: brandLabel.bottomAnchor, constant: DS.Spacing.m)
+        ])
     }
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
@@ -137,10 +151,10 @@ class RegisterViewController: UIViewController {
 
 extension RegisterViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        let fields: [AuthTextField] = [
+        let fields: [DSTextField] = [
             firstNameField, lastNameField, emailField, passwordField,
         ]
-        if let tf = textField as? AuthTextField,
+        if let tf = textField as? DSTextField,
             let index = fields.firstIndex(of: tf), index < fields.count - 1
         {
             fields[index + 1].becomeFirstResponder()
@@ -155,39 +169,30 @@ extension RegisterViewController: UITextFieldDelegate {
 extension RegisterViewController: RegisterViewInput {
 
     func render(_ model: RegisterViewModel) {
-        firstNameError.text = model.firstNameState.errorMessage
-        firstNameError.isHidden = !model.firstNameState.hasError
+        firstNameError.setMessage(model.firstNameState.errorMessage)
         firstNameField.setError(model.firstNameState.hasError)
 
-        lastNameError.text = model.lastNameState.errorMessage
-        lastNameError.isHidden = !model.lastNameState.hasError
+        lastNameError.setMessage(model.lastNameState.errorMessage)
         lastNameField.setError(model.lastNameState.hasError)
 
-        emailError.text = model.emailState.errorMessage
-        emailError.isHidden = !model.emailState.hasError
+        emailError.setMessage(model.emailState.errorMessage)
         emailField.setError(model.emailState.hasError)
 
-        passwordError.text = model.passwordState.errorMessage
-        passwordError.isHidden = !model.passwordState.hasError
+        passwordError.setMessage(model.passwordState.errorMessage)
         passwordField.setError(model.passwordState.hasError)
 
-        errorBanner.isHidden = model.errorBanner.isEmpty
-        errorBanner.text = model.errorBanner
+        errorBanner.setMessage(model.errorBanner)
 
         model.isLoading ? showLoading() : hideLoading()
     }
 
     private func showLoading() {
         registerButton.isEnabled = false
-        var config = registerButton.configuration
-        config?.title = "Регистрация..."
-        registerButton.configuration = config
+        registerButton.setTitleText("Регистрация...")
     }
 
     private func hideLoading() {
         registerButton.isEnabled = true
-        var config = registerButton.configuration
-        config?.title = "Зарегистрироваться"
-        registerButton.configuration = config
+        registerButton.setTitleText("Зарегистрироваться")
     }
 }

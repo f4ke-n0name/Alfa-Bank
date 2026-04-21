@@ -6,7 +6,7 @@ class AuthRouter: AuthRouterInput {
     var repository: AuthRepositoryProtocol?
 
     func openCardList(session: UserSession) {
-        let cardListVC = CardListStubViewController(session: session)
+        let cardListVC = CardListModule.build()
         let nav = viewController?.navigationController
         if let nav = nav {
             nav.setViewControllers([cardListVC], animated: true)

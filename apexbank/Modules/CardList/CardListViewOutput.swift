@@ -1,4 +1,6 @@
 protocol CardListViewOutput: AnyObject {
     func viewDidLoad()
-    func didTapRetry()
+    func didRequestReload()
+    func didSelectItem(id: String)
+    func didTapLogout()
 }

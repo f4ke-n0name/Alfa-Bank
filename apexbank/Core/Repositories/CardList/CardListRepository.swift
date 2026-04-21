@@ -3,11 +3,20 @@ import Foundation
 class CardListRepository: CardListRepositoryProtocol {
 
     private let url = URL(string: "https://alfaitmo.ru/server/echo/408099/cards/list")!
+    private let session: NetworkSession
+
+    init(session: NetworkSession) {
+        self.session = session
+    }
+
+    convenience init() {
+        self.init(session: URLSession(configuration: .default))
+    }
 
     func getCards() async throws -> [CardDTO] {
         do {
-            let (data, response) = try await URLSession.shared.data(from: url)
-            
+            let (data, response) = try await session.data(from: url)
+
             guard let http = response as? HTTPURLResponse else {
                 throw NetworkError.badResponse(statusCode: -1)
             }
