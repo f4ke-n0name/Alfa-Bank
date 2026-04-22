@@ -7,54 +7,43 @@ class AuthViewController: UIViewController {
     private let titleLabel: UILabel = {
         let l = UILabel()
         l.text = "ApexBank"
-        l.font = .systemFont(ofSize: 32, weight: .bold)
         l.textAlignment = .center
+        l.apply(.title1)
+        l.textColor = DS.Colors.primary
         return l
     }()
 
     private let subtitleLabel: UILabel = {
         let l = UILabel()
         l.text = "Войдите в аккаунт"
-        l.font = .systemFont(ofSize: 17)
         l.textAlignment = .center
-        l.textColor = .secondaryLabel
+        l.apply(.title2)
+        l.textColor = DS.Colors.textSecondary
         return l
     }()
 
-    private let emailField = AuthTextField(placeholder: "Email", keyboardType: .emailAddress)
-    private let emailErrorLabel = AuthErrorLabel()
+    private let emailField = DSTextField(placeholder: "Email", keyboardType: .emailAddress)
+    private let emailErrorLabel = DSErrorLabel()
 
-    private let passwordField = AuthTextField(placeholder: "Пароль", isSecure: true)
-    private let passwordErrorLabel = AuthErrorLabel()
+    private let passwordField = DSTextField(placeholder: "Пароль", isSecure: true)
+    private let passwordErrorLabel = DSErrorLabel()
 
     private let passwordToggleButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setImage(UIImage(systemName: "eye"), for: .normal)
         btn.setImage(UIImage(systemName: "eye.slash"), for: .selected)
-        btn.tintColor = .secondaryLabel
+        btn.tintColor = DS.Colors.textSecondary
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
 
-    private let errorBanner = AuthErrorBanner()
+    private let errorBanner = DSErrorBanner()
 
-    private let loginButton: UIButton = {
-        var config = UIButton.Configuration.filled()
-        config.title = "Войти"
-        config.cornerStyle = .large
-        config.baseForegroundColor = .white
-        config.baseBackgroundColor = .systemBlue
-        let btn = UIButton(configuration: config)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        return btn
-    }()
+    private let loginButton = DSButton(title: "Войти")
 
-    private let registerButton: UIButton = {
-        let btn = UIButton(type: .system)
-        btn.setTitle("Нет аккаунта? Зарегистрироваться", for: .normal)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        return btn
-    }()
+    private let registerButton = DSButton(title: "Нет аккаунта? Зарегистрироваться")
+
+    private let themeToggle = DSThemeToggleButton()
 
     private lazy var stackView: UIStackView = {
         let sv = UIStackView(arrangedSubviews: [
@@ -69,19 +58,30 @@ class AuthViewController: UIViewController {
             registerButton
         ])
         sv.axis = .vertical
-        sv.spacing = 12
-        sv.setCustomSpacing(4, after: emailField)
-        sv.setCustomSpacing(4, after: passwordField)
+        sv.spacing = 16
+
         sv.setCustomSpacing(24, after: subtitleLabel)
-        sv.setCustomSpacing(20, after: errorBanner)
+        sv.setCustomSpacing(8, after: emailField)
+        sv.setCustomSpacing(8, after: passwordField)
+        sv.setCustomSpacing(16, after: errorBanner)
+
         sv.translatesAutoresizingMaskIntoConstraints = false
         return sv
     }()
 
-
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = DS.Colors.background
+
+        // Ensure navigation title style uses title2
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: DS.Colors.primary,
+            .font: DS.Typography.title2()
+        ]
+        navigationController?.navigationBar.titleTextAttributes = titleAttributes
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: themeToggle)
+
         setupLayout()
         setupActions()
     }
@@ -90,36 +90,45 @@ class AuthViewController: UIViewController {
         view.endEditing(true)
     }
 
-
     private func setupLayout() {
         view.addSubview(stackView)
-
         passwordField.addSubview(passwordToggleButton)
 
         NSLayoutConstraint.activate([
-            stackView.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            // 🔥 вместо center — нормальный layout
+            stackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 80),
+            stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: DS.Spacing.l),
+            stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -DS.Spacing.l),
+            stackView.bottomAnchor.constraint(lessThanOrEqualTo: view.bottomAnchor, constant: -40),
 
+            // 🔥 высоты как в макете
+            emailField.heightAnchor.constraint(equalToConstant: 52),
+            passwordField.heightAnchor.constraint(equalToConstant: 52),
             loginButton.heightAnchor.constraint(equalToConstant: 52),
 
+
+            // eye button
             passwordToggleButton.centerYAnchor.constraint(equalTo: passwordField.centerYAnchor),
             passwordToggleButton.trailingAnchor.constraint(equalTo: passwordField.trailingAnchor, constant: -14),
             passwordToggleButton.widthAnchor.constraint(equalToConstant: 28),
             passwordToggleButton.heightAnchor.constraint(equalToConstant: 28),
         ])
+
+        registerButton.titleLabel?.numberOfLines = 0
+        registerButton.titleLabel?.textAlignment = .center
     }
 
     private func setupActions() {
         loginButton.addTarget(self, action: #selector(loginTapped), for: .touchUpInside)
         registerButton.addTarget(self, action: #selector(registerTapped), for: .touchUpInside)
         passwordToggleButton.addTarget(self, action: #selector(togglePassword), for: .touchUpInside)
+
         emailField.delegate = self
         passwordField.delegate = self
+
         emailField.addTarget(self, action: #selector(emailChanged), for: .editingChanged)
         passwordField.addTarget(self, action: #selector(passwordChanged), for: .editingChanged)
     }
-
 
     @objc private func loginTapped() {
         view.endEditing(true)
@@ -159,31 +168,24 @@ extension AuthViewController: UITextFieldDelegate {
 extension AuthViewController: AuthViewInput {
 
     func render(_ model: AuthViewModel) {
-        emailErrorLabel.text = model.emailState.errorMessage
-        emailErrorLabel.isHidden = !model.emailState.hasError
+        emailErrorLabel.setMessage(model.emailState.errorMessage)
         emailField.setError(model.emailState.hasError)
 
-        passwordErrorLabel.text = model.passwordState.errorMessage
-        passwordErrorLabel.isHidden = !model.passwordState.hasError
+        passwordErrorLabel.setMessage(model.passwordState.errorMessage)
         passwordField.setError(model.passwordState.hasError)
 
-        errorBanner.isHidden = model.errorBanner.isEmpty
-        errorBanner.text = model.errorBanner
+        errorBanner.setMessage(model.errorBanner)
 
         model.isLoading ? showLoading() : hideLoading()
     }
 
     private func showLoading() {
         loginButton.isEnabled = false
-        var config = loginButton.configuration
-        config?.title = "Вход..."
-        loginButton.configuration = config
+        loginButton.setTitleText("Вход...")
     }
 
     private func hideLoading() {
         loginButton.isEnabled = true
-        var config = loginButton.configuration
-        config?.title = "Войти"
-        loginButton.configuration = config
+        loginButton.setTitleText("Войти")
     }
 }
