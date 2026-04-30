@@ -6,6 +6,7 @@ final class RegisterPresenter {
     var router: RegisterRouterInput?
 
     private var isLoading = false
+    private var formValues: [String: String] = [:]
 
     private func render(
         firstNameError: String = "",
@@ -31,9 +32,64 @@ extension RegisterPresenter: RegisterViewOutput {
 
     func viewDidLoad() {}
 
-    func didTapRegister(firstName: String, lastName: String, email: String, password: String) {
+    func handle(action: BDUIAction) {
+        switch action.type {
+        case .event:
+            handleEvent(name: action.name, context: action.context)
+        case .route:
+            handleRoute(target: action.target)
+        case .reload:
+            break
+        }
+    }
+
+    private func handleEvent(name: String?, context: [String: String]?) {
+        switch name {
+        case "firstNameChanged":
+            let value = context?["text"] ?? ""
+            formValues["firstName"] = value
+            let error = interactor?.validateName(value) ?? ""
+            render(firstNameError: error)
+
+        case "lastNameChanged":
+            let value = context?["text"] ?? ""
+            formValues["lastName"] = value
+            let error = interactor?.validateName(value) ?? ""
+            render(lastNameError: error)
+
+        case "emailChanged":
+            let value = context?["text"] ?? ""
+            formValues["email"] = value
+            let error = interactor?.validateEmail(value) ?? ""
+            render(emailError: error)
+
+        case "passwordChanged":
+            let value = context?["text"] ?? ""
+            formValues["password"] = value
+            let error = interactor?.validatePassword(value) ?? ""
+            render(passwordError: error)
+
+        case "register":
+            register()
+
+        default:
+            break
+        }
+    }
+
+    private func handleRoute(target: String?) {
+        if target == "back" {
+            router?.back()
+        }
+    }
+
+    private func register() {
         guard !isLoading else { return }
 
+        let firstName = formValues["firstName"] ?? ""
+        let lastName = formValues["lastName"] ?? ""
+        let email = formValues["email"] ?? ""
+        let password = formValues["password"] ?? ""
         let firstNameError = firstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Введите имя" : ""
         let lastNameError = lastName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Введите фамилию" : ""
         let emailError = email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Введите email" : ""
@@ -86,29 +142,5 @@ extension RegisterPresenter: RegisterViewOutput {
                 self.render(banner: error.localizedDescription)
             }
         }
-    }
-
-    func didTapBack() {
-        router?.back()
-    }
-
-    func didChangeFirstName(_ value: String) {
-        let error = interactor?.validateName(value) ?? ""
-        render(firstNameError: error)
-    }
-
-    func didChangeLastName(_ value: String) {
-        let error = interactor?.validateName(value) ?? ""
-        render(lastNameError: error)
-    }
-
-    func didChangeEmail(_ value: String) {
-        let error = interactor?.validateEmail(value) ?? ""
-        render(emailError: error)
-    }
-
-    func didChangePassword(_ value: String) {
-        let error = interactor?.validatePassword(value) ?? ""
-        render(passwordError: error)
     }
 }

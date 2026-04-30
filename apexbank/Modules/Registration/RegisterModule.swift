@@ -3,7 +3,13 @@ import UIKit
 enum RegisterModule {
     static func build(repository: AuthRepositoryProtocol?) -> UIViewController {
         let repo = repository ?? AuthRepository.shared
-        let view       = RegisterViewController()
+        let jsonLoader = BDUIJSONLoader(session: URLSession.shared)
+        let bduiInteractor = BDUIInteractor(loader: jsonLoader)
+        let bduiPresenter = BDUIPresenter(
+            interactor: bduiInteractor,
+            mapper: BDUIViewMapper()
+        )
+        let view       = RegisterViewController(bduiModule: bduiPresenter)
         let presenter  = RegisterPresenter()
         let interactor = RegisterInteractor(repository: repo)
         let router     = RegisterRouter()
@@ -13,6 +19,7 @@ enum RegisterModule {
         presenter.interactor  = interactor
         presenter.router      = router
         router.viewController = view
+        bduiPresenter.view = view
 
         return view
     }
