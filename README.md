@@ -1,5 +1,34 @@
 # ApexBank
 
+
+## Лабораторная №7 - BDUI
+
+## 1 Модель + JSON
+Сделал модель BDUINode, которая декодится из JSON.  
+Внутри есть type, payload, children (вложенность).
+
+## 2 Маппер
+Сделал BDUIViewMapper, который по type создает нужную вью.  
+Если есть children, рекурсивно добавляет их в контейнер.
+
+## 3 Отдельный BDUI модуль
+Вынес в отдельные штуки:
+- BDUIInteractor
+- BDUIPresenter
+- BDUIScreenType
+- BDUIScreenContainerViewController
+
+Как и просили, BDUI модуль сам собирает и отдает экран в модули, и для них он blackbox
+
+## 4 Actions
+Сделал простой pipeline:
+- BDUIAction
+- BDUIActionDispatcher
+- BDUIActionHandling
+
+События из JSON (`event/route/reload`) обрабатываются через этот механизм.
+
+
 ## Лабораторная №6 — дизайн-система
 
 ### Ссылка на дизайн-систему в Figma

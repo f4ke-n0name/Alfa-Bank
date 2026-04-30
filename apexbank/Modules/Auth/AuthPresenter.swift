@@ -6,15 +6,60 @@ class AuthPresenter {
     var router: AuthRouterInput?
 
     private var isLoading = false
+    private var currentEmailError = ""
+    private var currentPasswordError = ""
+    private var currentBanner = ""
+    private var formValues: [String: String] = [:]
 }
 
 extension AuthPresenter: AuthViewOutput {
 
     func viewDidLoad() {}
 
-    func didTapLogin(email: String, password: String) {
+    func handle(action: BDUIAction) {
+        switch action.type {
+        case .event:
+            handleEvent(name: action.name, context: action.context)
+        case .route:
+            handleRoute(target: action.target)
+        case .reload:
+            break
+        }
+    }
+
+    private func handleEvent(name: String?, context: [String: String]?) {
+        switch name {
+        case "emailChanged":
+            let email = context?["text"] ?? ""
+            formValues["email"] = email
+            let error = interactor?.validateEmail(email) ?? ""
+            render(emailError: error, banner: "")
+
+        case "passwordChanged":
+            let password = context?["text"] ?? ""
+            formValues["password"] = password
+            let error = interactor?.validatePassword(password) ?? ""
+            render(passwordError: error, banner: "")
+
+        case "login":
+            login()
+
+        default:
+            break
+        }
+    }
+
+    private func handleRoute(target: String?) {
+        if target == "registration" {
+            router?.openRegistration()
+        }
+    }
+
+    private func login() {
         guard !isLoading else { return }
 
+        let email = formValues["email"] ?? ""
+        let password = formValues["password"] ?? ""
         let emailError = email.isEmpty ? "Введите email" : ""
         let passwordError = password.isEmpty ? "Введите пароль" : ""
 
@@ -24,7 +69,12 @@ extension AuthPresenter: AuthViewOutput {
         }
 
         isLoading = true
-        render(isLoading: true)
+        render(
+            emailError: "",
+            passwordError: "",
+            banner: "",
+            isLoading: true
+        )
 
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
@@ -48,7 +98,11 @@ extension AuthPresenter: AuthViewOutput {
             } catch let error as AuthError {
                 switch error {
                 case .invalidCredentials:
-                    self.render(banner: error.localizedDescription)
+                    self.render(
+                        emailError: "Неверный email или пароль",
+                        passwordError: "Неверный email или пароль",
+                        banner: error.localizedDescription
+                    )
                 case .invalidEmailFormat:
                     self.render(emailError: error.localizedDescription)
                 case .passwordTooShort:
@@ -61,40 +115,39 @@ extension AuthPresenter: AuthViewOutput {
             }
         }
     }
-    
-    func didTapRegister() {
-        router?.openRegistration()
-    }
-
-    func didChangeEmail(_ email: String) {
-        let error = interactor?.validateEmail(email) ?? ""
-        render(emailError: error)
-    }
-
-    func didChangePassword(_ password: String) {
-        let error = interactor?.validatePassword(password) ?? ""
-        render(passwordError: error)
-    }
 
     private func render(
-        emailError: String = "",
-        passwordError: String = "",
-        banner: String = "",
-        isLoading: Bool = false
+        emailError: String? = nil,
+        passwordError: String? = nil,
+        banner: String? = nil,
+        isLoading: Bool? = nil
     ) {
+        if let emailError {
+            currentEmailError = emailError
+        }
+        if let passwordError {
+            currentPasswordError = passwordError
+        }
+        if let banner {
+            currentBanner = banner
+        }
+        if let isLoading {
+            self.isLoading = isLoading
+        }
+
         let model = AuthViewModel(
             emailState: FieldState(
                 text: "",
-                hasError: !emailError.isEmpty,
-                errorMessage: emailError
+                hasError: !currentEmailError.isEmpty,
+                errorMessage: currentEmailError
             ),
             passwordState: FieldState(
                 text: "",
-                hasError: !passwordError.isEmpty,
-                errorMessage: passwordError
+                hasError: !currentPasswordError.isEmpty,
+                errorMessage: currentPasswordError
             ),
-            errorBanner: banner,
-            isLoading: isLoading
+            errorBanner: currentBanner,
+            isLoading: self.isLoading
         )
         view?.render(model)
     }
